@@ -1,11 +1,13 @@
-var Crafty = require('../core/core.js'),
-    document = window.document;
+var Crafty = require('../core/core.js');
+
 
 Crafty.extend({
     /**@
      * #Crafty.diamondIso
      * @category 2D
-     * Place entities in a 45deg diamond isometric fashion. It is similar to isometric but has another grid locations
+     * Place entities in a 45deg diamond isometric fashion. It is similar to Crafty.isometric but has another grid locations
+     * In this mode, the x axis and y axis are aligned to the edges of tiles with x increasing being down and to the
+     * right and y being down and to the left.
      */
     diamondIso: {
         _tile: {
@@ -148,10 +150,10 @@ Crafty.extend({
                 marginY = obj.__margin[1];
             }
             var points = [
-                [marginX - 0, obj.h - marginY - this._tile.height / 2],
-                [marginX - this._tile.width / 2, obj.h - marginY - 0],
-                [marginX - this._tile.width, obj.h - marginY - this._tile.height / 2],
-                [marginX - this._tile.width / 2, obj.h - marginY - this._tile.height]
+                marginX - 0, obj.h - marginY - this._tile.height / 2,
+                marginX - this._tile.width / 2, obj.h - marginY - 0,
+                marginX - this._tile.width, obj.h - marginY - this._tile.height / 2,
+                marginX - this._tile.width / 2, obj.h - marginY - this._tile.height
             ];
             var poly = new Crafty.polygon(points);
             return poly;

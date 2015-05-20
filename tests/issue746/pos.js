@@ -1,12 +1,14 @@
-module("2D");
-test("pos Pass In Object", function() {
-    
-    var player = Crafty.e("2D, DOM, Color").attr({
+(function() {
+  var module = QUnit.module;
+
+  module("2D");
+  test("pos Pass In Object", function() {
+    var player = Crafty.e("2D").attr({
       x: 0,
       y: 50,
       w: 100,
       h: 150
-    }).color("red");
+    });
     
     var posObject = {};
 
@@ -23,5 +25,6 @@ test("pos Pass In Object", function() {
 
     strictEqual(player.pos()._h, 150, "H value");
     strictEqual(posObject._h, 150, "H value");
+  });
 
-});
+})();

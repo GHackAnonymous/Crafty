@@ -1,6 +1,5 @@
-var Crafty = require('../core/core.js'),
-	Animation = require('../core/animation.js'),
-	document = window.document;
+var Crafty = require('../core/core.js');
+
 
 /**@
 * #SpriteAnimation

@@ -1,5 +1,4 @@
 var Crafty = require('../core/core.js'),
-    document = window.document,
     HashMap = require('./spatial-grid.js');
 
 
@@ -144,9 +143,9 @@ Crafty.c("2D", {
     _changed: false,
 
     
-
-    _define2DProperties: function () {
-        Object.defineProperty(this, 'x', {
+    // Setup   all the properties that we need to define
+    _2D_property_definitions: {
+        x: {
             set: function (v) {
                 this._attr('_x', v);
             },
@@ -155,11 +154,10 @@ Crafty.c("2D", {
             },
             configurable: true,
             enumerable: true
-        });
+        },
+        _x: {enumerable:false},
 
-        Object.defineProperty(this, '_x', {enumerable:false});
-
-        Object.defineProperty(this, 'y', {
+        y: {
             set: function (v) {
                 this._attr('_y', v);
             },
@@ -168,10 +166,10 @@ Crafty.c("2D", {
             },
             configurable: true,
             enumerable: true
-        });
-        Object.defineProperty(this, '_y', {enumerable:false});
+        },
+        _y: {enumerable:false},
 
-        Object.defineProperty(this, 'w', {
+        w: {
             set: function (v) {
                 this._attr('_w', v);
             },
@@ -180,10 +178,10 @@ Crafty.c("2D", {
             },
             configurable: true,
             enumerable: true
-        });
-        Object.defineProperty(this, '_w', {enumerable:false});
+        },
+        _w: {enumerable:false},
 
-        Object.defineProperty(this, 'h', {
+        h: {
             set: function (v) {
                 this._attr('_h', v);
             },
@@ -192,10 +190,10 @@ Crafty.c("2D", {
             },
             configurable: true,
             enumerable: true
-        });
-        Object.defineProperty(this, '_h', {enumerable:false});
+        },
+        _h: {enumerable:false},
 
-        Object.defineProperty(this, 'z', {
+        z: {
             set: function (v) {
                 this._attr('_z', v);
             },
@@ -204,10 +202,10 @@ Crafty.c("2D", {
             },
             configurable: true,
             enumerable: true
-        });
-        Object.defineProperty(this, '_z', {enumerable:false});
+        },
+        _z: {enumerable:false},
 
-        Object.defineProperty(this, 'rotation', {
+        rotation: {
             set: function (v) {
                 this._attr('_rotation', v);
             },
@@ -216,10 +214,10 @@ Crafty.c("2D", {
             },
             configurable: true,
             enumerable: true
-        });
-        Object.defineProperty(this, '_rotation', {enumerable:false});
+        },
+        _rotation: {enumerable:false},
 
-        Object.defineProperty(this, 'alpha', {
+        alpha: {
             set: function (v) {
                 this._attr('_alpha', v);
             },
@@ -228,10 +226,10 @@ Crafty.c("2D", {
             },
             configurable: true,
             enumerable: true
-        });
-        Object.defineProperty(this, '_alpha', {enumerable:false});
+        },
+        _alpha: {enumerable:false},
 
-        Object.defineProperty(this, 'visible', {
+        visible: {
             set: function (v) {
                 this._attr('_visible', v);
             },
@@ -240,8 +238,15 @@ Crafty.c("2D", {
             },
             configurable: true,
             enumerable: true
-        });
-        Object.defineProperty(this, '_visible', {enumerable:false});
+        },
+        _visible: {enumerable:false}
+
+    },
+
+    _define2DProperties: function () {
+        for (var prop in this._2D_property_definitions){
+            Object.defineProperty(this, prop, this._2D_property_definitions[prop]);
+        }
     },
 
     init: function () {
@@ -260,7 +265,7 @@ Crafty.c("2D", {
         this._children = [];
 
         
-   
+        // create setters and getters that associate properties such as x/_x
         this._define2DProperties();
         
 
@@ -483,7 +488,8 @@ Crafty.c("2D", {
             };
         }
 
-        return Crafty.rectManager.overlap(mbr, rect);
+        return mbr._x < rect._x + rect._w && mbr._x + mbr._w > rect._x &&
+            mbr._y < rect._y + rect._h && mbr._y + mbr._h > rect._y;
     },
 
     /**@
@@ -927,10 +933,17 @@ Crafty.c("2D", {
  * @trigger CheckLanding - When entity is about to land. This event is triggered with the object the entity is about to land on. Third parties can respond to this event and prevent the entity from being able to land.
  *
  * Component that detects if the entity collides with the ground. This component is automatically added and managed by the Gravity component.
- * The appropriate events are fired when the entity state changes (lands on ground / lifts off ground). The current state can also be accessed with .ground().
+ * The appropriate events are fired when the entity state changes (lands on ground / lifts off ground). The current ground entity can also be accessed with `.ground`.
  */
 Crafty.c("Supportable", {
-    _ground: false,
+    /**@
+     * #.ground
+     * @comp Supportable
+     *
+     * Access the ground entity (which may be the actual ground entity if it exists, or `null` if it doesn't exist) and thus whether this entity is currently on the ground or not. 
+     * The ground entity is also available through the events, when the ground entity changes.
+     */
+    _ground: null,
     _groundComp: null,
 
     /**@
@@ -945,8 +958,9 @@ Crafty.c("Supportable", {
      * ~~~
      * var player = Crafty.e("2D, Gravity");
      * player.bind("CheckLanding", function(ground) {
-     *     if (player.isAirplane) // custom behaviour
+     *     if (player.y + player.h > ground.y + player.dy) { // forbid landing, if player's feet are not above ground
      *         player.canLand = false;
+     *     }
      * });
      * ~~~
      */
@@ -954,7 +968,8 @@ Crafty.c("Supportable", {
 
     init: function () {
         this.requires("2D");
-        this.__pos = {_x: 0, _y: 0, _w: 0, _h: 0};
+        this.__area = {_x: 0, _y: 0, _w: 0, _h: 0};
+        this.defineField("ground", function() { return this._ground; }, function(newValue) {});
     },
     remove: function(destroyed) {
         this.unbind("EnterFrame", this._detectGroundTick);
@@ -1003,55 +1018,52 @@ Crafty.c("Supportable", {
 
         return this;
     },
-    /**@
-     * #.ground
-     * @comp Supportable
-     * @sign public Object|false .ground()
-     * @return the ground entity if this entity is currently on the ground or false if this entity is not currently on the ground
-     * 
-     * Determine the ground entity and thus whether this entity is currently on the ground or not. 
-     * The information is also available through the events, when the state changes.
-     */
-    ground: function() {
-        return this._ground;
-    },
+
     _detectGroundTick: function() {
-        var obj, hit = false,
-            q, i = 0, l;
+        var groundComp = this._groundComp,
+            ground = this._ground,
+            overlap = Crafty.rectManager.overlap;
 
-        var pos = this.__pos;
-            pos._x = this._x;
-            pos._y = this._y + 1; //Increase by 1 to make sure map.search() finds the floor
-            pos._w = this._w;
-            pos._h = this._h;
+        var pos = this._cbr || this._mbr || this,
+            area = this.__area;
+        area._x = pos._x;
+        area._y = pos._y + 1; // Increase by 1 to make sure map.search() finds the floor
+        area._w = pos._w;
+        area._h = pos._h;
         // Decrease width by 1px from left and 1px from right, to fall more gracefully
-        // pos._x++; pos._w--;
-        
+        // area._x++; area._w--;
 
-        q = Crafty.map.search(pos);
-        l = q.length;
-        for (; i < l; ++i) {
-            obj = q[i];
-            //check for an intersection directly below the player
-            if (obj !== this && obj.has(this._groundComp) && obj.intersect(pos)) {
-                hit = obj;
-                break;
+        if (ground) {
+            var garea = ground._cbr || ground._mbr || ground;
+            if (!(ground.__c[groundComp] && overlap(garea, area))) {
+                this._ground = null;
+                this.trigger("LiftedOffGround", ground); // no collision with ground was detected for first time
+                ground = null;
             }
         }
 
+        if (!ground) {
+            var obj, oarea,
+                results = Crafty.map.search(area, false),
+                i = 0,
+                l = results.length;
 
-        if (hit && !this._ground) { // collision with ground was detected for first time
-            this.canLand = true;
-            this.trigger("CheckLanding", hit); // is entity allowed to land?
-            if (this.canLand) {
-                this._ground = hit;
-                this.y = hit._y - this._h; // snap entity to ground object
-                this.trigger("LandedOnGround", this._ground);
+            for (; i < l; ++i) {
+                obj = results[i];
+                oarea = obj._cbr || obj._mbr || obj;
+                // check for an intersection with the player
+                if (obj !== this && obj.__c[groundComp] && overlap(oarea, area)) {
+                    this.canLand = true;
+                    this.trigger("CheckLanding", obj); // is entity allowed to land?
+                    if (this.canLand) {
+                        this._ground = ground = obj;
+                        this.y = obj._y - this._h; // snap entity to ground object
+                        this.trigger("LandedOnGround", ground); // collision with ground was detected for first time
+
+                        break;
+                    }
+                }
             }
-        } else if (!hit && this._ground) { // no collision with ground was detected for first time
-            var ground = this._ground;
-            this._ground = false;
-            this.trigger("LiftedOffGround", ground);
         }
     }
 });
@@ -1093,16 +1105,18 @@ Crafty.c("GroundAttacher", {
 /**@
  * #Gravity
  * @category 2D
- * @trigger Moved - triggered on movement on either x or y axis. If the entity has moved on both axes for diagonal movement the event is triggered twice - { x:Number, y:Number } - Old position
+ * @trigger Moved - When entity has moved due to velocity/acceleration on either x or y axis a Moved event is triggered. If the entity has moved on both axes for diagonal movement the event is triggered twice. - { axis: 'x' | 'y', oldValue: Number } - Old position
+ * @trigger NewDirection - When entity has changed direction due to velocity on either x or y axis a NewDirection event is triggered. The event is triggered once, if direction is different from last frame. - { x: -1 | 0 | 1, y: -1 | 0 | 1 } - New direction
  * 
  * Adds gravitational pull to the entity.
  *
- * @see Motion
+ * @see Supportable, Motion
  */
 Crafty.c("Gravity", {
+    _gravityConst: 0.2,
+
     init: function () {
         this.requires("2D, Supportable, Motion");
-        this._gravityConst = this.__convertPixelsToMeters(9.81);
 
         this.bind("LiftedOffGround", this._startGravity); // start gravity if we are off ground
         this.bind("LandedOnGround", this._stopGravity); // stop gravity once landed
@@ -1123,7 +1137,7 @@ Crafty.c("Gravity", {
      * @sign public this .gravity([comp])
      * @param comp - The name of a component that will stop this entity from falling
      *
-     * Enable gravity for this entity no matter whether comp parameter is not specified,
+     * Enable gravity for this entity no matter whether comp parameter is specified or not.
      * If comp parameter is specified all entities with that component will stop this entity from falling.
      * For a player entity in a platform game this would be a component that is added to all entities
      * that the player should be able to walk on.
@@ -1136,7 +1150,8 @@ Crafty.c("Gravity", {
      *   .attr({ w: 100, h: 100 })
      *   .gravity("platform");
      * ~~~
-     * @see Supportable
+     *
+     * @see Supportable, Motion
      */
     gravity: function (comp) {
         this.bind("CheckLanding", this._gravityCheckLanding);
@@ -1165,7 +1180,7 @@ Crafty.c("Gravity", {
      * @sign public this .gravityConst(g)
      * @param g - gravitational constant
      *
-     * Set the gravitational constant to g. The default is 9.81 . The greater g, the faster the object falls.
+     * Set the gravitational constant to g. The default is 0.2 . The greater g, the faster the object falls.
      *
      * @example
      * ~~~
@@ -1177,29 +1192,31 @@ Crafty.c("Gravity", {
      * ~~~
      */
     gravityConst: function (g) {
-        var newGravityConst = this.__convertPixelsToMeters(g);
-        if (!this.ground()) { // gravity active, change acceleration
+        if (this._gravityActive) { // gravity active, change acceleration
             this.ay -= this._gravityConst;
-            this.ay += newGravityConst;
+            this.ay += g;
         }
-        this._gravityConst = newGravityConst;
+        this._gravityConst = g;
 
         return this;
     },
     _startGravity: function() {
+        this._gravityActive = true;
         this.ay += this._gravityConst;
     },
     _stopGravity: function() {
         this.ay = 0;
         this.vy = 0;
+        this._gravityActive = false;
     }
 });
+
 
 var __motionProp = function(self, prefix, prop, setter) {
     var publicProp = prefix + prop;
     var privateProp = "_" + publicProp;
 
-    var motionEvent = { key: "", value: 0};
+    var motionEvent = { key: "", oldValue: 0};
     // getters & setters for public property
     if (setter) {
         Crafty.defineField(self, publicProp, function() { return this[privateProp]; }, function(newValue) {
@@ -1208,7 +1225,7 @@ var __motionProp = function(self, prefix, prop, setter) {
                 this[privateProp] = newValue;
 
                 motionEvent.key = publicProp;
-                motionEvent.value = oldValue;
+                motionEvent.oldValue = oldValue;
                 this.trigger("MotionChange", motionEvent);
             }
         });
@@ -1247,9 +1264,11 @@ var __motionVector = function(self, prefix, setter, vector) {
  * #AngularMotion
  * @category 2D
  * @trigger Rotated - When entity has rotated due to angular velocity/acceleration a Rotated event is triggered. - Number - Old rotation
- * @trigger MotionChange - when a motion property has changed - { key: String propertyName, value: Number oldPropertyValue }
+ * @trigger NewRevolution - When entity has changed rotational direction due to rotational velocity a NewRevolution event is triggered. The event is triggered once, if direction is different from last frame. - -1 | 0 | 1 - New direction
+ * @trigger MotionChange - When a motion property has changed a MotionChange event is triggered. - { key: String, oldValue: Number } - Motion property name and old value
  *
  * Component that allows rotating an entity by applying angular velocity and acceleration.
+ * All angular motion values are expressed in degrees per frame (e.g. an entity with `vrotation` of 10 will rotate 10 degrees each frame).
  */
 Crafty.c("AngularMotion", {
     /**@
@@ -1310,10 +1329,19 @@ Crafty.c("AngularMotion", {
         __motionProp(this, "a", "rotation", true);
         __motionProp(this, "d", "rotation", false);
 
+        this.__oldRevolution = 0;
+
         this.bind("EnterFrame", this._angularMotionTick);
+        this.bind("FPSChange", this._angularChangeFPS);
+        this._angularChangeFPS(Crafty.timer.FPS());
     },
     remove: function(destroyed) {
         this.unbind("EnterFrame", this._angularMotionTick);
+        this.unbind("FPSChange", this._angularChangeFPS);
+    },
+
+    _angularChangeFPS: function(fps) {
+        this._dtFactor = fps / 1000;
     },
 
     /**@
@@ -1337,19 +1365,29 @@ Crafty.c("AngularMotion", {
      * v += a * Δt
      */
     _angularMotionTick: function(frameData) {
-        var dt = frameData.dt/1000;
+        var dt = frameData.dt * this._dtFactor;
 
-        var oldRotation = this._rotation;
+        var _vr = this._vrotation,
+            dvr = _vr >> 31 | -_vr >>> 31; // Math.sign(this._vrotation)
+        if (this.__oldRevolution !== dvr) {
+            this.__oldRevolution = dvr;
+            this.trigger('NewRevolution', dvr);
+        }
+
+        var oldR = this._rotation,
+            vr = this._vrotation,
+            ar = this._arotation;
+
         // s += v * Δt + (0.5 * a) * Δt * Δt
-        var newRotation = oldRotation + this._vrotation * dt + 0.5 * this._arotation * dt * dt;
+        var newR = oldR + vr * dt + 0.5 * ar * dt * dt;
         // v += a * Δt
-        this.vrotation = this._vrotation + this._arotation * dt;
+        this.vrotation = vr + ar * dt;
         // Δs = s[t] - s[t-1]
-        this._drotation = newRotation - oldRotation;
+        this._drotation = newR - oldR;
 
         if (this._drotation !== 0) {
-            this.rotation = newRotation;
-            this.trigger('Rotated', oldRotation);
+            this.rotation = newR;
+            this.trigger('Rotated', oldR);
         }
     }
 });
@@ -1357,19 +1395,14 @@ Crafty.c("AngularMotion", {
 /**@
  * #Motion
  * @category 2D
- * @trigger Moved - When entity has moved due to velocity/acceleration on either x or y axis a Moved event is triggered. If the entity has moved on both axes for diagonal movement the event is triggered twice. - { x:Number, y:Number } - Old position
- * @trigger MotionChange - when a motion property has changed - { key: String propertyName, value: Number oldPropertyValue }
+ * @trigger Moved - When entity has moved due to velocity/acceleration on either x or y axis a Moved event is triggered. If the entity has moved on both axes for diagonal movement the event is triggered twice. - { axis: 'x' | 'y', oldValue: Number } - Old position
+ * @trigger NewDirection - When entity has changed direction due to velocity on either x or y axis a NewDirection event is triggered. The event is triggered once, if direction is different from last frame. - { x: -1 | 0 | 1, y: -1 | 0 | 1 } - New direction
+ * @trigger MotionChange - When a motion property has changed a MotionChange event is triggered. - { key: String, oldValue: Number } - Motion property name and old value
  *
  * Component that allows moving an entity by applying linear velocity and acceleration.
+ * All linear motion values are expressed in pixels per frame (e.g. an entity with `vx` of 1 will move 1px on the x axis each frame).
  */
 Crafty.c("Motion", {
-    /*
-     * Utility function which converts the input argument `pixels` into `meters`.
-     */
-    __convertPixelsToMeters: function(pixels) {
-        return pixels * 100;
-    },
-
     /**@
      * #.vx
      * @comp Motion
@@ -1485,10 +1518,21 @@ Crafty.c("Motion", {
         __motionProp(this, "d", "y", false);
         this._motionDelta = __motionVector(this, "d", false, new Crafty.math.Vector2D());
 
+        this.__movedEvent = {axis: '', oldValue: 0};
+        this.__directionEvent = {x: 0, y: 0};
+        this.__oldDirection = {x: 0, y: 0};
+
         this.bind("EnterFrame", this._linearMotionTick);
+        this.bind("FPSChange", this._linearChangeFPS);
+        this._linearChangeFPS(Crafty.timer.FPS());
     },
     remove: function(destroyed) {
         this.unbind("EnterFrame", this._linearMotionTick);
+        this.unbind("FPSChange", this._linearChangeFPS);
+    },
+
+    _linearChangeFPS: function(fps) {
+        this._dtFactor = fps / 1000;
     },
 
     /**@
@@ -1583,27 +1627,43 @@ Crafty.c("Motion", {
      * v += a * Δt
      */
     _linearMotionTick: function(frameData) {
-        var dt = frameData.dt/1000;
+        var dt = frameData.dt * this._dtFactor;
 
-        var oldX = this._x;
-        var oldY = this._y;
+        var oldDirection = this.__oldDirection;
+        var _vx = this._vx, dvx = _vx >> 31 | -_vx >>> 31, // Math.sign(this._vx)
+            _vy = this._vy, dvy = _vy >> 31 | -_vy >>> 31; // Math.sign(this._vy)
+        if (oldDirection.x !== dvx || oldDirection.y !== dvy) {
+            var directionEvent = this.__directionEvent;
+            directionEvent.x = oldDirection.x = dvx;
+            directionEvent.y = oldDirection.y = dvy;
+            this.trigger('NewDirection', directionEvent);
+        }
+
+        var oldX = this._x, vx = this._vx, ax = this._ax,
+            oldY = this._y, vy = this._vy, ay = this._ay;
+
         // s += v * Δt + (0.5 * a) * Δt * Δt
-        var newX = oldX + this._vx * dt + 0.5 * this._ax * dt * dt;
-        var newY = oldY + this._vy * dt + 0.5 * this._ay * dt * dt;
+        var newX = oldX + vx * dt + 0.5 * ax * dt * dt;
+        var newY = oldY + vy * dt + 0.5 * ay * dt * dt;
         // v += a * Δt
-        this.vx = this._vx + this._ax * dt;
-        this.vy = this._vy + this._ay * dt;
+        this.vx = vx + ax * dt;
+        this.vy = vy + ay * dt;
         // Δs = s[t] - s[t-1]
         this._dx = newX - oldX;
         this._dy = newY - oldY;
 
+        var movedEvent = this.__movedEvent;
         if (this._dx !== 0) {
             this.x = newX;
-            this.trigger('Moved', {x: oldX, y: newY});
+            movedEvent.axis = 'x';
+            movedEvent.oldValue = oldX;
+            this.trigger('Moved', movedEvent);
         }
         if (this._dy !== 0) {
             this.y = newY;
-            this.trigger('Moved', {x: newX, y: oldY});
+            movedEvent.axis = 'y';
+            movedEvent.oldValue = oldY;
+            this.trigger('Moved', movedEvent);
         }
     }
 });

@@ -1,11 +1,14 @@
-var Crafty = require('../core/core.js'),
-    document = window.document;
+var Crafty = require('../core/core.js');
+
 
 Crafty.extend({
     /**@
      * #Crafty.isometric
      * @category 2D
-     * Place entities in a 45deg isometric fashion.
+     * Place entities in a 45deg isometric fashion. The alignment of this
+     * grid's axes for tile placement is 90 degrees.  If you are looking
+     * to have the grid of tile indicies for this.place aligned to the tiles
+     * themselves, use DiamondIso instead.
      */
     isometric: {
         _tile: {

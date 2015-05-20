@@ -163,14 +163,14 @@ Crafty.fn = Crafty.prototype = {
 
             //update from the cache
             if (!this.__c) this.__c = {};
-            if (!this._callbacks) addCallbackMethods(this);
+            if (!this._callbacks) Crafty._addCallbackMethods(this);
 
             //update to the cache if NULL
             if (!entities[selector]) entities[selector] = this;
             return entities[selector]; //return the cached selector
         }
 
-        addCallbackMethods(this);
+        Crafty._addCallbackMethods(this);
         return this;
     },
 
@@ -222,20 +222,14 @@ Crafty.fn = Crafty.prototype = {
      * ~~~
      */
     addComponent: function (id) {
-        var comps = [],
+        var comps,
             comp, c = 0;
 
         //add multiple arguments
-        if (arguments.length > 1) {
-            var i = 0;
-            for (; i < arguments.length; i++) {
-                comps.push(arguments[i]);
-            }
-            //split components if contains comma
-        } else if (id.indexOf(',') !== -1) {
+        if (arguments.length === 1 && id.indexOf(',') !== -1) {
             comps = id.split(rlist);
         } else {
-            comps.push(id);
+            comps = arguments;
         }
 
         //extend the components
@@ -944,9 +938,7 @@ Crafty.fn = Crafty.prototype = {
                 if (comp && "remove" in comp)
                     comp.remove.call(this, true);
             }
-            for (var e in handlers) {
-                this.unbind(e);
-            }
+            this._unbindAll();
             delete entities[this[0]];
         });
     }
@@ -1010,7 +1002,7 @@ Crafty.extend = Crafty.fn.extend = function (obj) {
 // Objects, which can listen to events (or collections of such objects) have varying logic 
 // on how the events are bound/triggered/unbound.  Since the underlying operations on the callback array are the same,
 // the single-object operations are implemented in the following object.  
-// Calling `addCallbackMethods` on an object will extend that object with these methods.
+// Calling `Crafty._addCallbackMethods(obj)` on an object will extend that object with these methods.
 
 
  
@@ -1021,6 +1013,7 @@ Crafty._callbackMethods = {
         var callbacks = this._callbacks[event];
         if (!callbacks) {
             callbacks = this._callbacks[event] = ( handlers[event] || ( handlers[event] = {} ) )[this[0]] = [];
+            callbacks.context = this;
             callbacks.depth = 0;
         }
         // Push to callback array
@@ -1039,10 +1032,12 @@ Crafty._callbackMethods = {
         // callbacks.depth tracks whether this function was invoked in the middle of a previous iteration through the same callback array
         callbacks.depth++;
         for (i = 0; i < l; i++) {
-            if (typeof callbacks[i] === "undefined" && callbacks.depth <= 1) {
-                callbacks.splice(i, 1);
-                i--;
-                l--;
+            if (typeof callbacks[i] === "undefined") {
+                if (callbacks.depth <= 1) {
+                    callbacks.splice(i, 1);
+                    i--;
+                    l--;
+                }
             } else {
                 callbacks[i].call(this, data);
             }
@@ -1065,17 +1060,30 @@ Crafty._callbackMethods = {
                 delete callbacks[i];
             }
         }
+    },
+
+    // Completely all callbacks for every event, such as on object destruction
+    _unbindAll: function() {
+        if (!this._callbacks) return;
+        for (var event in this._callbacks) {
+            if (this._callbacks[event]) {
+                // Remove the normal way, in case we've got a nested loop
+                this._unbindCallbacks(event);
+                // Also completely delete the registered callback from handlers
+                delete handlers[event][this[0]];
+            }
+        }
     }
 };
 
 // Helper function to add the callback methods above to an object, as well as initializing the callbacks object
 // it provies the "low level" operations; bind, unbind, and trigger will still need to be implemented for that object
-addCallbackMethods = function(context) {
+Crafty._addCallbackMethods = function(context) {
     context.extend(Crafty._callbackMethods);
     context._callbacks = {};
 };
 
-addCallbackMethods(Crafty);
+Crafty._addCallbackMethods(Crafty);
 
 Crafty.extend({
     // Define Crafty's id
@@ -1256,7 +1264,9 @@ Crafty.extend({
                 if (onFrame) {
                     tick = function () {
                         Crafty.timer.step();
-                        requestID = onFrame(tick);
+                        if (tick !== null) {
+                            requestID = onFrame(tick);
+                        }
                         //console.log(requestID + ', ' + frame)
                     };
 
@@ -1271,7 +1281,7 @@ Crafty.extend({
             stop: function () {
                 Crafty.trigger("CraftyStopTimer");
 
-                if (typeof tick === "number") clearInterval(tick);
+                if (typeof tick !== "function") clearInterval(tick);
 
                 var onFrame = window.cancelAnimationFrame ||
                     window.cancelRequestAnimationFrame ||
@@ -1412,6 +1422,7 @@ Crafty.extend({
              * Returns the target frames per second. This is not an actual frame rate.
              * @sign public void Crafty.timer.FPS(Number value)
              * @param value - the target rate
+             * @trigger FPSChange - Triggered when the target FPS is changed by user - Number - new target FPS
              * Sets the target frames per second. This is not an actual frame rate.
              * The default rate is 50.
              */
@@ -1421,6 +1432,7 @@ Crafty.extend({
                 else {
                     FPS = value;
                     milliSecPerFrame = 1000 / FPS;
+                    Crafty.trigger("FPSChange", value);
                 }
             },
 
@@ -1578,23 +1590,15 @@ Crafty.extend({
 
         //  To learn how the event system functions, see the comments for Crafty._callbackMethods
         var hdl = handlers[event] || (handlers[event] = {}),
-            h, i, l, callbacks, context;
+            h, callbacks;
         //loop over every object bound
         for (h in hdl) {
-
             // Check whether h needs to be processed
             if (!hdl.hasOwnProperty(h)) continue;
             callbacks = hdl[h];
             if (!callbacks || callbacks.length === 0) continue;
 
-            //if an entity, call with that context; else the global context
-            if (entities[h])
-                context = Crafty(+h);
-            else if (h === 'global')
-                context = Crafty;
-            else
-                continue;
-            context._runCallbacks(event, data);
+            callbacks.context._runCallbacks(event, data);
         }
     },
 

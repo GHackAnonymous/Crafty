@@ -1,11 +1,13 @@
 (function() {
+  var module = QUnit.module;
+
   module("2D");
 
   test("position", function() {
-    var player = Crafty.e("2D, DOM, Color").attr({
+    var player = Crafty.e("2D").attr({
       w: 50,
       h: 50
-    }).color("red");
+    });
     player.x += 50;
     strictEqual(player._x, 50, "X moved");
 
@@ -34,10 +36,10 @@
   });
 
   test("intersect", function() {
-    var player = Crafty.e("2D, DOM, Color").attr({
+    var player = Crafty.e("2D").attr({
       w: 50,
       h: 50
-    }).color("red");
+    });
     player.x = 0;
     player.y = 0;
     player.w = 50;
@@ -57,7 +59,7 @@
   });
 
   test("within", function() {
-    var player = Crafty.e("2D, DOM, Color").attr({
+    var player = Crafty.e("2D").attr({
       w: 50,
       h: 50
     });
@@ -88,7 +90,7 @@
   });
 
   test("contains", function() {
-    var player = Crafty.e("2D, DOM, Color").attr({
+    var player = Crafty.e("2D").attr({
       w: 50,
       h: 50
     });
@@ -118,13 +120,11 @@
 
   });
 
-
-
   test("circle", function() {
-    var player = Crafty.e("2D, DOM, Color").attr({
+    var player = Crafty.e("2D").attr({
       w: 50,
       h: 50
-    }).color("red");
+    });
     var circle = new Crafty.circle(0, 0, 10);
 
     strictEqual(circle.containsPoint(1, 2), true, "Contained the point");
@@ -139,36 +139,36 @@
   });
 
   test("child", function() {
-    var parent0 = Crafty.e("2D, DOM, Color").attr({
+    var parent0 = Crafty.e("2D").attr({
       x: 0,
       y: 0,
       w: 50,
       h: 50
-    }).color("red");
-    var child0 = Crafty.e("2D, DOM, Color").attr({
+    });
+    var child0 = Crafty.e("2D").attr({
       x: 1,
       y: 1,
       w: 50,
       h: 50
-    }).color("red");
-    var child1 = Crafty.e("2D, DOM, Color").attr({
+    });
+    var child1 = Crafty.e("2D").attr({
       x: 2,
       y: 2,
       w: 50,
       h: 50
-    }).color("red");
-    var child2 = Crafty.e("2D, DOM, Color").attr({
+    });
+    var child2 = Crafty.e("2D").attr({
       x: 3,
       y: 3,
       w: 50,
       h: 50
-    }).color("red");
-    var child3 = Crafty.e("2D, DOM, Color").attr({
+    });
+    var child3 = Crafty.e("2D").attr({
       x: 4,
       y: 4,
       w: 50,
       h: 50
-    }).color("red");
+    });
     var child0_ID = child0[0];
     var child1_ID = child1[0];
     var child2_ID = child2[0];
@@ -193,24 +193,22 @@
   });
 
   test("child_rotate", function() {
-    var parent = Crafty.e("2D, DOM, Color")
+    var parent = Crafty.e("2D")
       .attr({
         x: 0,
         y: 0,
         w: 50,
         h: 50,
         rotation: 10
-      })
-      .color("red");
-    var child = Crafty.e("2D, DOM, Color")
+      });
+    var child = Crafty.e("2D")
       .attr({
         x: 10,
         y: 10,
         w: 50,
         h: 50,
         rotation: 15
-      })
-      .color("red");
+      });
     parent.attach(child);
 
     parent.rotation += 20;
@@ -253,6 +251,7 @@
   });
 
 
+  module("Collision");
 
   // This test assumes that the "circles" are really octagons, as per Crafty.circle.
   test("SAT overlap with circles", function() {
@@ -271,7 +270,6 @@
     strictEqual(e._SAT(c1, c2) !== false, true, "Polygons should test as overlapping");
 
   });
-
 
   test("adjustable boundary", function() {
     var e = Crafty.e("2D").attr({
@@ -302,57 +300,6 @@
     equal(e._by1, 5, "Y1 boundary set");
     equal(e._by2, 5, "Y2 boundary set");
 
-  });
-
-
-  test("disableControl and enableControl", function() {
-    var e = Crafty.e("2D, Twoway")
-      .attr({
-        x: 0
-      })
-      .twoway(1);
-
-    equal(e._movement.x, 0);
-    equal(e._x, 0);
-    Crafty.trigger('KeyDown', {
-      key: Crafty.keys.D
-    });
-    Crafty.trigger('EnterFrame', {dt: 1000});
-    equal(e._movement.x, 1);
-    equal(e._x, 1);
-
-    e.disableControl();
-    Crafty.trigger('EnterFrame', {dt: 1000});
-    equal(e._movement.x, 0);
-    equal(e._x, 1);
-
-    Crafty.trigger('KeyUp', {
-      key: Crafty.keys.D
-    });
-    Crafty.trigger('EnterFrame', {dt: 1000});
-    equal(e._movement.x, 0);
-    equal(e._x, 1);
-
-    e.enableControl();
-    Crafty.trigger('EnterFrame', {dt: 1000});
-    equal(e._movement.x, 0);
-    equal(e._x, 1);
-
-    Crafty.trigger('KeyDown', {
-      key: Crafty.keys.D
-    });
-    Crafty.trigger('EnterFrame', {dt: 1000});
-    equal(e._movement.x, 1);
-    equal(e._x, 2);
-
-    Crafty.trigger('KeyUp', {
-      key: Crafty.keys.D
-    });
-    Crafty.trigger('EnterFrame', {dt: 1000});
-    equal(e._movement.x, 0);
-    equal(e._x, 2);
-
-    e.destroy();
   });
 
 
@@ -494,6 +441,9 @@
 
   });
 
+
+  module("Motion");
+
   test("Motion", function() {
     var Vector2D = Crafty.math.Vector2D;
     var zero = new Vector2D();
@@ -543,11 +493,10 @@
     strictEqual(ent.drotation, 0, "angular delta should be zero");
 
 
-
-
+    Crafty.timer.FPS(25);
     ent.velocity().setValues(v0);
     ent.vrotation = v0_r;
-    Crafty.trigger('EnterFrame', {dt: 1000});
+    Crafty.timer.simulateFrames(1);
     ok(ent.velocity().equals(v0), "velocity should be <2,5>");
     strictEqual(ent.vrotation, v0_r, "angular velocity should be 10");
     ok(ent.motionDelta().equals(v0), "delta should be <2,5>");
@@ -559,7 +508,7 @@
     var dPos = new Vector2D(a).scale(0.5).add(v0), dPos_r = v0_r + 0.5*a_r;
     ent.acceleration().setValues(a);
     ent.arotation = a_r;
-    Crafty.trigger('EnterFrame', {dt: 1000});
+    Crafty.timer.simulateFrames(1);
     ok(dPos.equals(new Vector2D(4,6)), "should be <4,6>");
     strictEqual(dPos_r, 2.5, "should be 2.5");
     ok(ent.motionDelta().equals(dPos), "delta should be <4,6>");
@@ -572,76 +521,238 @@
     strictEqual(ent.vrotation, v1_r, "angular velocity should be -5");
 
 
-
+    Crafty.timer.FPS(50);
     ent.attr({x: 0, y: 0})
        .resetMotion()
        .resetAngularMotion();
 
     ent.velocity().x = 10;
     ent.acceleration().x = 5;
-    Crafty.trigger('EnterFrame', {dt: 500});
+    Crafty.timer.simulateFrames(1, (1000 / Crafty.timer.FPS()) / 2);
     equal(ent.velocity().x, 10+5*0.5, "velocity x should be 12.5");
     equal(ent.x, 10*0.5+0.5*5*0.5*0.5, "entity x should be 5.625");
 
     ent.destroy();
   });
 
-  test("Supportable", function() {
-    var ground = Crafty.e("2D, Ground").attr({x: 0, y: 10, w:10, h:10}); // [0,10] to [0,20]
+  test("Motion - Events", function() {
+    var Vector2D = Crafty.math.Vector2D;
+    var zero = new Vector2D();
+    var e = Crafty.e("2D, Motion, AngularMotion")
+      .attr({x: 0, y:0});
 
-    var landedCount = 0, liftedCount = 0;
+    var newDirectionEvents = 0,
+        newRevolutionEvents = 0,
+        movedEvents = 0,
+        rotatedEvents = 0,
+        motionEvents = 0;
+    e.bind("NewDirection", function(evt) {
+      newDirectionEvents++;
+    });
+    e.bind("NewRevolution", function(evt) {
+      newRevolutionEvents++;
+    });
+    e.bind("Moved", function(evt) {
+      movedEvents++;
+    });
+    e.bind("Rotated", function(evt) {
+      rotatedEvents++;
+    });
+    e.bind("MotionChange", function(evt) {
+      motionEvents++;
+    });
+
+
+    e.one("NewDirection", function(evt) {
+      equal(evt.x, 0);
+      equal(evt.y, 1);
+    });
+    e.one("Moved", function(evt) { strictEqual(evt.axis, "y"); strictEqual(evt.oldValue, 0); });
+    e.one("MotionChange", function(evt) { strictEqual(evt.key, "vy"); strictEqual(evt.oldValue, 0); });
+    e.vy = 1;
+    Crafty.timer.simulateFrames(1);
+
+    e.one("NewDirection", function(evt) {
+      equal(evt.x, -1);
+      equal(evt.y, -1);
+    });
+    e.one("Moved", function(evt) { strictEqual(evt.axis, "x"); strictEqual(evt.oldValue, 0); 
+    e.one("Moved", function(evt) { strictEqual(evt.axis, "y"); strictEqual(evt.oldValue, 1); });});
+    e.one("MotionChange", function(evt) { strictEqual(evt.key, "vx"); strictEqual(evt.oldValue, 0); });
+    e.vx = -1;
+    e.one("MotionChange", function(evt) { strictEqual(evt.key, "vy"); strictEqual(evt.oldValue, 1); });
+    e.vy = 0;
+    e.one("MotionChange", function(evt) { strictEqual(evt.key, "vy"); strictEqual(evt.oldValue, 0); });
+    e.vy = -1;
+    Crafty.timer.simulateFrames(1);
+
+    e.one("Moved", function(evt) { strictEqual(evt.axis, "x"); strictEqual(evt.oldValue, -1); 
+    e.one("Moved", function(evt) { strictEqual(evt.axis, "y"); strictEqual(evt.oldValue, 0); });});
+    e.vx = -1;
+    e.one("MotionChange", function(evt) { strictEqual(evt.key, "vy"); strictEqual(evt.oldValue, -1); });
+    e.vy = 0;
+    e.one("MotionChange", function(evt) { strictEqual(evt.key, "vy"); strictEqual(evt.oldValue, 0); });
+    e.vy = -1;
+    Crafty.timer.simulateFrames(1);
+
+    e.one("NewDirection", function(evt) {
+      equal(evt.x, 0);
+      equal(evt.y, -1);
+    });
+    e.one("Moved", function(evt) { strictEqual(evt.axis, "y"); strictEqual(evt.oldValue, -1); });
+    e.one("MotionChange", function(evt) { strictEqual(evt.key, "vx"); strictEqual(evt.oldValue, -1); });
+    e.vx = 0;
+    e.one("MotionChange", function(evt) { strictEqual(evt.key, "vy"); strictEqual(evt.oldValue, -1); });
+    e.vy = 0;
+    e.one("MotionChange", function(evt) { strictEqual(evt.key, "vy"); strictEqual(evt.oldValue, 0); });
+    e.vy = -1;
+    Crafty.timer.simulateFrames(1);
+
+    e.one("NewDirection", function(evt) {
+      equal(evt.x, 0);
+      equal(evt.y, 0);
+      evt.x = 1; // bad boy!
+    });
+    e.one("MotionChange", function(evt) { strictEqual(evt.key, "vy"); strictEqual(evt.oldValue, -1); });
+    e.vy = 0;
+    Crafty.timer.simulateFrames(1);
+
+    e.vx = 0;
+    e.one("MotionChange", function(evt) { strictEqual(evt.key, "vy"); strictEqual(evt.oldValue, 0); });
+    e.vy = 1;
+    e.one("MotionChange", function(evt) { strictEqual(evt.key, "vy"); strictEqual(evt.oldValue, 1); });
+    e.vy = 0;
+    Crafty.timer.simulateFrames(1);
+
+
+    e.vrotation = 0;
+    Crafty.timer.simulateFrames(1);
+
+    e.one("MotionChange", function(evt) { strictEqual(evt.key, "vrotation"); strictEqual(evt.oldValue, 0); });
+    e.vrotation = 1;
+    e.one("MotionChange", function(evt) { strictEqual(evt.key, "vrotation"); strictEqual(evt.oldValue, 1); });
+    e.vrotation = 0;
+    Crafty.timer.simulateFrames(1);
+
+    e.one("NewRevolution", function(evt) {
+      equal(evt, 1);
+    });
+    e.one("Rotated", function(oldValue) { strictEqual(oldValue, 0); });
+    e.one("MotionChange", function(evt) { strictEqual(evt.key, "vrotation"); strictEqual(evt.oldValue, 0); });
+    e.vrotation = 1;
+    Crafty.timer.simulateFrames(1);
+
+    e.one("NewRevolution", function(evt) {
+      equal(evt, -1);
+    });
+    e.one("Rotated", function(oldValue) { strictEqual(oldValue, 1); });
+    e.one("MotionChange", function(evt) { strictEqual(evt.key, "vrotation"); strictEqual(evt.oldValue, 1); });
+    e.vrotation = -1;
+    Crafty.timer.simulateFrames(1);
+
+    e.one("NewRevolution", function(evt) {
+      equal(evt, 0);
+    });
+    e.one("MotionChange", function(evt) { strictEqual(evt.key, "vrotation"); strictEqual(evt.oldValue, -1); });
+    e.vrotation = 0;
+    Crafty.timer.simulateFrames(1);
+
+    equal(newDirectionEvents, 4);
+    equal(newRevolutionEvents, 3);
+    equal(movedEvents, 6);
+    equal(rotatedEvents, 2);
+    equal(motionEvents, 17);
+    e.destroy();
+  });
+
+  test("Supportable", function() {
+    var ground = Crafty.e("2D, Ground")
+      .attr({x: 0, y: 10, w:10, h:10}); // y: 10 to 20
+    var ground2 = Crafty.e("2D, Ground")
+      .attr({x: 0, y: 15, w:10, h:10}); // y: 15 to 25
+
+    var landedCount = 0,
+        liftedCount = 0,
+        previousGround = null;
     var ent = Crafty.e("2D, Supportable")
-      .attr({x: 0, y:0, w:5, h:5})
+      .attr({x: 0, y:0, w:5, h:5}) // y: y to y+5
       .bind("LandedOnGround", function(obj) {
-        ok(ent.ground(), "entity should be on ground");
-        equal(obj, ground, "ground object should be equal");
+        ok(ent.ground, "entity should be on ground");
+        strictEqual(obj, ent.ground, "ground object should be equal");
+        ok(!previousGround, "previous ground should not exist");
+        previousGround = obj;
         landedCount++;
       })
       .bind("LiftedOffGround", function(obj) {
-        ok(!ent.ground(), "entitiy should not be on ground");
-        equal(obj, ground, "ground object should be equal");
+        ok(!ent.ground, "entitiy should not be on ground");
+        strictEqual(obj, previousGround, "ground object should be equal");
+        ok(previousGround, "previous ground should exist");
+        previousGround = null;
         liftedCount++;
       })
       .startGroundDetection("Ground");
 
 
-    ok(!ent.ground(), "entity should not be on ground");
-    Crafty.trigger("EnterFrame");
-    ok(!ent.ground(), "entity should not be on ground");
+    strictEqual(ent.ground, null, "entity should not be on ground");
+    Crafty.timer.simulateFrames(1);
+    strictEqual(ent.ground, null, "entity should not be on ground");
 
     ent.y = 5;
-    Crafty.trigger("EnterFrame"); // 1 landed event should have occured
+    Crafty.timer.simulateFrames(1); // 1 landed event should have occured
     equal(ent.y, 5, "ent y should not have changed");
-    ok(ent.ground(), "entity should be on ground");
+    strictEqual(ent.ground, ground, "entity should be on ground");
 
     ent.y = 0;
-    Crafty.trigger("EnterFrame"); // 1 lifted event should have occured
+    Crafty.timer.simulateFrames(1); // 1 lifted event should have occured
     equal(ent.y, 0, "ent y should not have changed");
-    ok(!ent.ground(), "entity should not be on ground");
+    strictEqual(ent.ground, null, "entity should not be on ground");
 
     ent.y = 7;
-    Crafty.trigger("EnterFrame"); // 1 landed event should have occured
-    equal(ent.y, 5, "ent y should have been snapped to ground");
-    ok(ent.ground(), "entity should be on ground");
+    Crafty.timer.simulateFrames(1); // 1 landed event should have occured
+    equal(ent.y, ground.y - ent.h, "ent y should have been snapped to ground");
+    strictEqual(ent.ground, ground, "entity should be on ground");
 
-    ent.y = 0;
-    Crafty.trigger("EnterFrame"); // 1 lifted event should have occured
-    equal(ent.y, 0, "ent y should not have changed");
-    ok(!ent.ground(), "entity should not be on ground");
+    ent.y = 9;
+    Crafty.timer.simulateFrames(1);
+    equal(ent.y, 9, "ent y should not have changed");
+    strictEqual(ent.ground, ground, "entity should be on ground");
 
-    ent.bind("CheckLanding", function(ground) {
-      this.canLand = false;
+    ent.y = 16;
+    Crafty.timer.simulateFrames(1);
+    equal(ent.y, 16, "ent y should not have changed");
+    strictEqual(ent.ground, ground, "entity should be on ground");
+
+    ent.y = 21;
+    Crafty.timer.simulateFrames(1); // 1 lifted event & 1 landed event should have occured
+    equal(ent.y, ground2.y - ent.h, "ent y should have been snapped to ground");
+    strictEqual(ent.ground, ground2, "entity should be on ground2");
+
+    ground.removeComponent("Ground");
+    ground2.removeComponent("Ground");
+    Crafty.timer.simulateFrames(1); // 1 lifted event should have occured
+    equal(ent.y, ground2.y - ent.h, "ent y should not have changed");
+    strictEqual(ent.ground, null, "entity should not be on ground");
+
+    ground.addComponent("Ground");
+    ground2.addComponent("Ground");
+    ent.bind("CheckLanding", function(candidate) {
+      if (candidate === ground)
+        this.canLand = false;
     });
     ent.y = 7;
-    Crafty.trigger("EnterFrame"); // no event should have occured
+    Crafty.timer.simulateFrames(1); // no event should have occured
     equal(ent.y, 7, "ent y should not have changed");
-    ok(!ent.ground(), "entity should not be on ground");
+    strictEqual(ent.ground, null, "entity should not be on ground");
+    ent.y = 12;
+    Crafty.timer.simulateFrames(1); // 1 landed event should have occured
+    equal(ent.y, ground2.y - ent.h, "ent y should have been snapped to ground");
+    strictEqual(ent.ground, ground2, "entity should be on ground2");
 
-
-    equal(landedCount, 2, "landed count mismatch");
-    equal(liftedCount, 2, "lifted count mismatch");
+    equal(landedCount, 4, "landed count mismatch");
+    equal(liftedCount, 3, "lifted count mismatch");
 
     ground.destroy();
+    ground2.destroy();
     ent.destroy();
   });
 
@@ -658,19 +769,23 @@
     strictEqual(player.x, 10, "player did not move with ground");
   });
 
-  test("Gravity", function() {
+
+  test("Integrationtest - Gravity", function() {
+    var done = false;
+
     var ground = Crafty.e("2D, platform")
           .attr({ x: 0, y: 280, w: 600, h: 20 });
 
     var player = Crafty.e("2D, Gravity")
           .attr({ x: 0, y: 100, w: 32, h: 16 })
+          .gravityConst(0.3)
           .gravity("platform");
    
     strictEqual(player.acceleration().y, player._gravityConst, "acceleration should match gravity constant");
 
     var vel = -1;
     player.bind("EnterFrame", function() {
-      if (!this.ground()) {
+      if (!this.ground) {
         ok(this.velocity().y > vel, "velocity should increase");
         vel = this.velocity().y;
       } else {
@@ -688,14 +803,12 @@
         this.bind("LiftedOffGround", function() {
           liftCount++;
 
-          Crafty.trigger("EnterFrame", {dt: 50});
-          Crafty.trigger("EnterFrame", {dt: 50});
-          Crafty.trigger("EnterFrame", {dt: 50});
+          Crafty.timer.simulateFrames(3);
           vel = -1;
 
           var oldVel = this.velocity().y;
-          this.gravityConst(5);
-          strictEqual(this._gravityConst, this.__convertPixelsToMeters(5), "gravity constant should have changed");
+          this.gravityConst(0.2);
+          strictEqual(this._gravityConst, 0.2, "gravity constant should have changed");
           strictEqual(this.acceleration().y, this._gravityConst, "acceleration should match gravity constant");
           strictEqual(this.velocity().y, oldVel, "velocity shouldn't have been resetted");
         });
@@ -707,14 +820,17 @@
         ground.destroy();
         player.destroy();
 
-        start();
+        done = true;
       }
     });
 
-    stop();
+    Crafty.timer.simulateFrames(75, 1000/50);
+    ok(done, "Test completed");
   });
 
-  test("Twoway", function() {
+  test("Integrationtest - Twoway", function() {
+    var done = false;
+
     var ground = Crafty.e("2D, platform")
           .attr({ x: 0, y: 200, w: 10, h: 20 });
 
@@ -745,11 +861,14 @@
         ground.destroy();
         player.destroy();
 
-        start();
+        this.trigger("KeyUp", {key: Crafty.keys.UP_ARROW});
+        this.trigger("KeyUp", {key: Crafty.keys.UP_ARROW});
+        done = true;
       }
     });
 
-    stop();
+    Crafty.timer.simulateFrames(75, 1000/50);
+    ok(done, "Test completed");
   });
 
 })();

@@ -1,6 +1,4 @@
-var Crafty = require('../core/core.js'),
-    document = window.document;
-
+var Crafty = require('../core/core.js');
 
 
 /**@
@@ -39,7 +37,7 @@ Crafty.extend({
        */
       overlap: function (rectA, rectB) {
         return (rectA._x < rectB._x + rectB._w && rectA._x + rectA._w > rectB._x &&
-                rectA._y < rectB._y + rectB._h && rectA._h + rectA._y > rectB._y);
+                rectA._y < rectB._y + rectB._h && rectA._y + rectA._h > rectB._y);
       },
 
       /**@
