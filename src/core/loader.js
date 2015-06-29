@@ -1,7 +1,6 @@
 var Crafty = require('../core/core.js');
 
-
-Crafty.extend({
+module.exports = {
     /**@
      * #Crafty.assets
      * @category Assets
@@ -14,7 +13,7 @@ Crafty.extend({
      * ~~~
      * var isLoaded = !!Crafty.assets["images/sprite.png"];
      * ~~~
-     * @see Crafty.loader
+     * @see Crafty.load
      */
     assets: {},
     __paths: { audio: "", images: "" },
@@ -69,10 +68,13 @@ Crafty.extend({
      * @sign public void Crafty.asset(String key, Object asset)
      * @param key - asset url.
      * @param asset - `Audio` or `Image` object.
+     *
      * Add new asset to assets object.
      *
      * @sign public void Crafty.asset(String key)
      * @param key - asset url.
+     *
+     *
      * Get asset from assets object.
      *
      * @example
@@ -140,7 +142,7 @@ Crafty.extend({
      */
     image_whitelist: ["jpg", "jpeg", "gif", "png", "svg"],
     /**@
-     * #Crafty.loader
+     * #Crafty.load
      * @category Assets
      * @sign public void Crafty.load(Object assets, Function onLoad[, Function onProgress[, Function onError]])
      * @param assets - Object JSON formatted (or JSON string), with assets to load (accepts sounds, images and sprites)
@@ -226,6 +228,10 @@ Crafty.extend({
      */
     load: function (data, oncomplete, onprogress, onerror) {
       
+        if (Array.isArray(data)) {
+            Crafty.log("Calling Crafty.load with an array of assets no longer works; see the docs for more details.");
+        }
+
         data = (typeof data === "string" ? JSON.parse(data) : data);
       
         var j = 0,
@@ -352,6 +358,7 @@ Crafty.extend({
      *
      * @sign public void Crafty.removeAssets(Object assets)
      * @param data - Object JSON formatted (or JSON string), with assets to remove (accepts sounds, images and sprites)
+     *
      * Removes assets (audio, images, sprites - and related sprite components) in order to allow the browser
      * to free memory.
      * 
@@ -434,4 +441,4 @@ Crafty.extend({
             }
         }
     }
-});
+};

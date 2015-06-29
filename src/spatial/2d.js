@@ -16,15 +16,6 @@ var M = Math,
     PI = M.PI,
     DEG_TO_RAD = PI / 180;
 
-Crafty.extend({
-    zeroFill: function (number, width) {
-        width -= number.toString().length;
-        if (width > 0)
-            return new Array(width + (/\./.test(number) ? 2 : 1)).join('0') + number;
-        return number.toString();
-    }
-});
-
 /**@
  * #2D
  * @category 2D
@@ -473,6 +464,7 @@ Crafty.c("2D", {
      * @param h - Height of the rect
      * @sign public Boolean .intersect(Object rect)
      * @param rect - An object that must have the `_x, _y, _w, _h` values as properties
+     *
      * Determines if this entity intersects a rectangle.  If the entity is rotated, its MBR is used for the test.
      */
     intersect: function (x, y, w, h) {
@@ -502,6 +494,7 @@ Crafty.c("2D", {
      * @param h - Height of the rect
      * @sign public Boolean .within(Object rect)
      * @param rect - An object that must have the `_x, _y, _w, _h` values as properties
+     *
      * Determines if this current entity is within another rectangle.
      */
     within: function (x, y, w, h) {
@@ -531,6 +524,7 @@ Crafty.c("2D", {
      * @param h - Height of the rect
      * @sign public Boolean .contains(Object rect)
      * @param rect - An object that must have the `_x, _y, _w, _h` values as properties.
+     *
      * Determines if the rectangle is within the current entity.  If the entity is rotated, its MBR is used for the test.
      */
     contains: function (x, y, w, h) {
@@ -553,16 +547,14 @@ Crafty.c("2D", {
     /**@
      * #.pos
      * @comp 2D
-     * @sign public Object .pos(void)
+     * @sign public Object .pos([Object pos])
+     * @param pos - an object to use as output
      *
-     * @param {{}=obj} pos
-     * Returns the x, y, w, h properties as a new rect object if
-     * no object is included. If object is inclued adds x, y, w, h 
-     * to included object.
-     * (a rect object is just an object with the keys _x, _y, _w, _h).
+     * @returns An object with this entity's `_x`, `_y`, `_w`, and `_h` values. 
+     *          If an object is passed in, it will be reused rather than creating a new object.
      *
-     * The keys have an underscore prefix. This is due to the x, y, w, h
-     * properties being merely setters and getters that wrap the properties with an underscore (_x, _y, _w, _h).
+     * @note The keys have an underscore prefix. This is due to the x, y, w, h
+     * properties being setters and getters that wrap the underlying properties with an underscore (_x, _y, _w, _h).
      */
     pos: function (pos) {
         pos = pos || {};
@@ -599,6 +591,7 @@ Crafty.c("2D", {
      * @sign public Boolean .isAt(Number x, Number y)
      * @param x - X position of the point
      * @param y - Y position of the point
+     *
      * Determines whether a point is contained by the entity. Unlike other methods,
      * an object can't be passed. The arguments require the x and y value.
      *
@@ -621,6 +614,7 @@ Crafty.c("2D", {
      * @sign public this .move(String dir, Number by)
      * @param dir - Direction to move (n,s,e,w,ne,nw,se,sw)
      * @param by - Amount to move in the specified direction
+     *
      * Quick method to move the entity in a direction (n, s, e, w, ne, nw, se, sw) by an amount of pixels.
      */
     move: function (dir, by) {
@@ -640,6 +634,7 @@ Crafty.c("2D", {
      * @param y - Amount to move Y
      * @param w - Amount to widen
      * @param h - Amount to increase height
+     *
      * Shift or move the entity by an amount. Use negative values
      * for an opposite direction.
      */
@@ -657,6 +652,7 @@ Crafty.c("2D", {
      * @comp 2D
      * @sign public void ._cascade(e)
      * @param e - An object describing the motion
+     *
      * Move or rotate the entity's children according to a certain motion.
      * This method is part of a function bound to "Move": It is used
      * internally for ensuring that when a parent moves, the child also
@@ -693,6 +689,7 @@ Crafty.c("2D", {
      * @comp 2D
      * @sign public this .attach(Entity obj[, .., Entity objN])
      * @param obj - Child entity(s) to attach
+     *
      * Sets one or more entities to be children, with the current entity (`this`)
      * as the parent. When the parent moves or rotates, its children move or
      * rotate by the same amount. (But not vice-versa: If you move a child, it
@@ -727,6 +724,7 @@ Crafty.c("2D", {
      * @comp 2D
      * @sign public this .detach([Entity obj])
      * @param obj - The entity to detach. Left blank will remove all attached entities
+     *
      * Stop an entity from following the current entity. Passing no arguments will stop
      * every entity attached.
      */
@@ -755,11 +753,14 @@ Crafty.c("2D", {
     /**@
      * #.origin
      * @comp 2D
+     *
      * @sign public this .origin(Number x, Number y)
      * @param x - Pixel value of origin offset on the X axis
      * @param y - Pixel value of origin offset on the Y axis
+     *
      * @sign public this .origin(String offset)
      * @param offset - Combination of center, top, bottom, middle, left and right
+     *
      * Set the origin point of an entity for it to rotate around.
      *
      * @example
@@ -874,7 +875,10 @@ Crafty.c("2D", {
             this._rotate(value); // _rotate triggers "Rotate"
             //set the global Z and trigger reorder just in case
         } else if (name === '_z') {
-            this._globalZ = parseInt(value + Crafty.zeroFill(this[0], 5), 10); //magic number 10^5 is the max num of entities
+            var intValue = value <<0;
+            value = value==intValue ? intValue : intValue+1;
+            this._globalZ = value*100000+this[0]; //magic number 10^5 is the max num of entities
+            this[name] = value;
             this.trigger("reorder");
             //if the rect bounds change, update the MBR and trigger move
         } else if (name === '_x' || name === '_y') {
@@ -1348,7 +1352,6 @@ Crafty.c("AngularMotion", {
      * #.resetAngularMotion
      * @comp AngularMotion
      * @sign public this .resetAngularMotion()
-     * @return this
      * 
      * Reset all motion (resets velocity, acceleration, motionDelta).
      */
@@ -1579,6 +1582,7 @@ Crafty.c("Motion", {
      *
      * @sign public Vector2D .velocity()
      * @return The velocity Vector2D with the properties {x, y} that reflect the velocities in the <x, y> direction of the entity.
+     *
      * Returns the current velocity. You can access/modify the properties in order to retrieve/change the velocity.
 
      * @example
@@ -1605,6 +1609,7 @@ Crafty.c("Motion", {
      * 
      * @sign public Vector2D .acceleration()
      * @return The acceleration Vector2D with the properties {x, y} that reflects the acceleration in the <x, y> direction of the entity.
+     *
      * Returns the current acceleration. You can access/modify the properties in order to retrieve/change the acceleration.
      *
      * @example
@@ -1672,7 +1677,7 @@ Crafty.c("Motion", {
  * #Crafty.polygon
  * @category 2D
  *
- * Polygon object used for hitboxes and click maps. Takes a set of points as an
+ * The constructor for a polygon object used for hitboxes and click maps. Takes a set of points as an
  * argument, giving alternately the x and y coordinates of the polygon's vertices in order.
  *
  * The constructor accepts the coordinates as either a single array or as a set of individual arguments.
@@ -1759,10 +1764,10 @@ Crafty.polygon.prototype = {
      * Returns a clone of the polygon.
      *
      * @example
-     *
+     * ~~~
      * var poly = new Crafty.polygon([50, 0, 100, 100, 0, 100]);
      * var shiftedpoly = poly.clone().shift(5,5);
-     * //[[55, 5, 105, 5, 5, 105], but the original polygon is unchanged
+     * //[55, 5, 105, 5, 5, 105], but the original polygon is unchanged
      * ~~~
      */
     clone: function() {

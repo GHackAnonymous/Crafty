@@ -1,11 +1,12 @@
-var Crafty = require('../core/core.js');
-
-
 /**@
  * #Delay
  * @category Utilities
+ *
+ * A component for triggering functions after a given amount of time.
+ *
+ * This syncs with Crafty's internal clock, and so should generally be preferred to using methods such as `setTimeout`.
  */
-Crafty.c("Delay", {
+module.exports = {
     init: function () {
         this._delays = [];
         this.bind("EnterFrame", function (frameData) {
@@ -117,4 +118,4 @@ Crafty.c("Delay", {
         }
         return this;
     }
-});
+};
